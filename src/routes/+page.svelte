@@ -26,14 +26,12 @@
         try {
             const response = await ky.post('/private/upload', {
                 body: formData
-            }).json();
+            }).json<R2File>();
 
-            // Assuming the response includes the new file details
-            files = [...files, response] as R2File[];
-            fileInput.value = ''; // Reset input
+            files = [...files, response];
+            fileInput.value = '';
         } catch (error) {
             console.error('Upload failed:', error);
-            alert('Failed to upload file');
         } finally {
             uploading = false;
         }
