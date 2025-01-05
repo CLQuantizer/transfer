@@ -49,14 +49,17 @@
 
     const handleDownload = async (key: string, filename: string) => {
         try {
-            // Check if iOS
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const fileType = filename.split('.').pop()?.toLowerCase();
 
-            if (isIOS) {
-                // For iOS, open in a new tab directly
+            // Media types that should be viewed in browser
+            const viewableTypes = ['mp4', 'jpg', 'jpeg', 'png', 'gif', 'pdf'];
+
+            if (isIOS && viewableTypes.includes(fileType || '')) {
+                // For iOS media files - open in new tab
                 window.open(`/private/download/${key}`, '_blank');
             } else {
-                // For other platforms, use the blob approach
+                // For non-iOS or non-media files, try to download
                 const response = await ky.get(`/private/download/${key}`);
                 const blob = await response.blob();
                 const url = URL.createObjectURL(blob);
@@ -70,8 +73,6 @@
             }
         } catch (error) {
             console.error('Download failed:', error);
-        } finally {
-            await invalidateAll();
         }
     };
 
