@@ -70,6 +70,8 @@
             }
         } catch (error) {
             console.error('Download failed:', error);
+        } finally {
+            await invalidateAll();
         }
     };
 
