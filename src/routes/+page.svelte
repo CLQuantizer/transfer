@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Button } from "$lib/components/ui/button/index";
+    import ky from "ky";
 
     interface R2File {
         key: string;
@@ -11,6 +12,32 @@
     }
 
     export let data: { files: R2File[] };
+    let fileInput: HTMLInputElement;
+    let uploading = false;
+    let files = data.files;
+
+    const handleUpload = async () => {
+        if (!fileInput.files?.length) return;
+
+        uploading = true;
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            const response = await ky.post('/private/upload', {
+                body: formData
+            }).json();
+
+            // Assuming the response includes the new file details
+            files = [...files, response] as R2File[];
+            fileInput.value = ''; // Reset input
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Failed to upload file');
+        } finally {
+            uploading = false;
+        }
+    };
 
     // Helper function to format file size
     const formatFileSize = (bytes: number): string => {
@@ -40,6 +67,21 @@
 <div class="container mx-auto p-6">
     <div class="space-y-6">
         <h1 class="text-2xl font-bold">Files</h1>
+            <!-- Upload section -->
+        <div class="flex items-center space-x-4">
+            <input
+                    bind:this={fileInput}
+                    type="file"
+                    class="hidden"
+                    on:change={handleUpload}
+            />
+            <Button
+                    disabled={uploading}
+                    on:click={() => fileInput.click()}
+            >
+                {uploading ? 'Uploading...' : 'Upload File'}
+            </Button>
+        </div>
 
         {#if data.files.length === 0}
             <p>No files available.</p>
