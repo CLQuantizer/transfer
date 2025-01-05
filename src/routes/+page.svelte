@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Button } from "$lib/components/ui/button/index";
     import ky from "ky";
+    import {invalidateAll} from "$app/navigation";
 
     interface R2File {
         key: string;
@@ -34,6 +35,24 @@
             console.error('Upload failed:', error);
         } finally {
             uploading = false;
+            await invalidateAll();
+        }
+    };
+
+    const handleDownload = async (key: string) => {
+        try {
+            const response = await ky.get(`/private/download/${key}`);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = key;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Download failed:', error);
+        } finally {
+            await invalidateAll();
         }
     };
 
@@ -107,7 +126,7 @@
                         </div>
 
                         <!-- Download button -->
-                        <Button href={`/private/download/${file.key}`}>Download</Button>
+                        <Button on:click={async () => await handleDownload(file.key)}>Download</Button>
                     </div>
                 {/each}
             </div>
