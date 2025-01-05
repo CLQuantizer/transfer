@@ -7,25 +7,30 @@ export const GET: RequestHandler = async ({ params, platform }: any) => {
             return json({ error: 'Platform not available' });
         }
         const bucket = platform.env.TRANSFER;
+
+        // First get the object
         const object = await bucket.get(params.key);
 
         if (!object) {
             return error(404, 'File not found');
         }
 
-        // Get the headers from R2 object
+        // Get the object body and metadata before deletion
+        const body = await object.arrayBuffer();
         const headers = new Headers();
         object.writeHttpMetadata(headers);
         headers.set('etag', object.httpEtag);
-
-        // Set content disposition to trigger download
         headers.set('Content-Disposition', `attachment; filename="${params.key.split('/').pop()}"`);
 
-        return new Response(object.body, {
+        // Delete the object after retrieving it
+        await bucket.delete(params.key);
+
+        // Return the response with the file data
+        return new Response(body, {
             headers
         });
     } catch (err) {
-        console.error('Error downloading file:', err);
-        throw error(500, 'Failed to download file');
+        console.error('Error handling file:', err);
+        throw error(500, 'Failed to process file');
     }
 };
