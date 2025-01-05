@@ -46,7 +46,7 @@
         {:else}
             <div class="space-y-4">
                 {#each data.files as file}
-                    <div class="flex items-center justify-between p-4 bg-background rounded-lg shadow hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between p-4 bg-secondary rounded-lg shadow hover:shadow-md transition-shadow">
                         <div class="flex items-center space-x-4">
                             <!-- File type indicator -->
                             <div class="w-10 h-10 flex items-center justify-center bg-primary rounded-lg">
