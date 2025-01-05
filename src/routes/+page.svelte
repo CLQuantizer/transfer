@@ -43,17 +43,30 @@
         try {
             const response = await ky.get(`/private/download/${key}`);
             const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
 
-            // Simple iOS check
+            // Create an invisible link
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+
+            // For iOS devices, open in a new tab
             if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                const url = URL.createObjectURL(blob);
-                window.open(url, '_blank');
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                // Set the response type to trigger a download
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+
+                // Some iOS browsers need the element to be in the DOM
+                document.body.appendChild(a);
+                a.click();
+
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
             } else {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
+                // Desktop behavior
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
