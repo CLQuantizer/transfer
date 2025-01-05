@@ -91,7 +91,7 @@
                     <div class="flex items-center justify-between p-4 bg-secondary rounded-lg shadow hover:shadow-md transition-shadow">
                         <div class="flex items-center space-x-4">
                             <!-- File type indicator -->
-                            <div class="w-10 h-10 flex items-center justify-center bg-primary rounded-lg">
+                            <div class="w-10 h-10 flex items-center justify-center bg-background rounded-lg">
                                 <span class="text-sm font-medium">
                                     {getFileType(file.filename)}
                                 </span>
