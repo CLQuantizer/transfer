@@ -39,24 +39,31 @@
         }
     };
 
-    const handleDownload = async (key: string) => {
+    const handleDownload = async (key: string, filename: string) => {
         try {
             const response = await ky.get(`/private/download/${key}`);
             const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = key;
-            a.click();
-            URL.revokeObjectURL(url);
+
+            // Simple iOS check
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } else {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
         } catch (error) {
             console.error('Download failed:', error);
-        } finally {
-            await invalidateAll();
         }
     };
 
-    // Helper function to format file size
     const formatFileSize = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -65,7 +72,6 @@
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
-    // Helper function to format date
     const formatDate = (dateString: string): string => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -73,18 +79,12 @@
             day: 'numeric'
         });
     };
-
-    // Helper to get file type icon/label
-    const getFileType = (filename: string): string => {
-        const ext = filename.split('.').pop()?.toLowerCase() || '';
-        return ext.toUpperCase();
-    };
 </script>
 
 <div class="container mx-auto p-6">
     <div class="space-y-6">
         <h1 class="text-2xl font-bold">Files</h1>
-            <!-- Upload section -->
+
         <div class="flex items-center space-x-4">
             <input
                     bind:this={fileInput}
@@ -105,19 +105,11 @@
         {:else}
             <div class="space-y-4">
                 {#each data.files as file}
-                    <div class="flex items-center justify-between p-4 bg-secondary rounded-lg shadow hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between p-4 bg-secondary rounded-lg">
                         <div class="flex items-center space-x-4">
-                            <!-- File type indicator -->
-                            <div class="w-10 h-10 flex items-center justify-center bg-background rounded-lg">
-                                <span class="text-sm font-medium">
-                                    {getFileType(file.filename)}
-                                </span>
-                            </div>
-
-                            <!-- File details -->
                             <div class="space-y-1">
                                 <h3 class="font-medium">{file.filename}</h3>
-                                <div class="flex space-x-4 text-sm">
+                                <div class="flex space-x-4 text-sm text-gray-500">
                                     <span>{formatFileSize(file.size)}</span>
                                     <span>•</span>
                                     <span>{formatDate(file.uploadedAt)}</span>
@@ -125,8 +117,9 @@
                             </div>
                         </div>
 
-                        <!-- Download button -->
-                        <Button on:click={async () => await handleDownload(file.key)}>Download</Button>
+                        <Button on:click={() => handleDownload(file.key, file.filename)}>
+                            Download
+                        </Button>
                     </div>
                 {/each}
             </div>
