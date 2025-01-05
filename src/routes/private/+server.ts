@@ -1,7 +1,7 @@
 import {error, json} from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ params, platform }) => {
+export const GET: RequestHandler = async ({ params, platform }: any) => {
     try {
         if (!platform || !platform.env) {
             return json({ error: 'Platform not available' });

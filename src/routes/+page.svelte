@@ -68,10 +68,9 @@
 
                         <!-- Download button -->
                         <Button
-                                href={`/api/download/${file.key}`}
+                                href={`/private/${file.key}`}
                                 variant="outline"
-                                class="ml-4"
-                        >
+                                class="ml-4">
                             Download
                         </Button>
                     </div>
