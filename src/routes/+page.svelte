@@ -109,7 +109,7 @@
                         </div>
 
                         <!-- Download button -->
-                        <Button href={`/private/${file.key}`}>Download</Button>
+                        <Button href={`/private/download/${file.key}`}>Download</Button>
                     </div>
                 {/each}
             </div>
