@@ -22,17 +22,25 @@
 
         uploading = true;
         const formData = new FormData();
-        formData.append('file', fileInput.files[0]);
+
+        // Get the file and ensure it has a name
+        const file = fileInput.files[0];
+        formData.append('file', file, file.name);
 
         try {
             const response = await ky.post('/private/upload', {
-                body: formData
+                body: formData,
+                timeout: false, // Disable timeout for large files
+                headers: {
+                    'Accept': 'application/json'
+                }
             }).json<R2File>();
 
             files = [...files, response];
             fileInput.value = '';
         } catch (error) {
             console.error('Upload failed:', error);
+            alert('Upload failed. Please try again.');
         } finally {
             uploading = false;
             await invalidateAll();
@@ -41,32 +49,20 @@
 
     const handleDownload = async (key: string, filename: string) => {
         try {
-            const response = await ky.get(`/private/download/${key}`);
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
+            // Check if iOS
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-            // Create an invisible link
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-
-            // For iOS devices, open in a new tab
-            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                // Set the response type to trigger a download
-                a.target = '_blank';
-                a.rel = 'noopener noreferrer';
-
-                // Some iOS browsers need the element to be in the DOM
-                document.body.appendChild(a);
-                a.click();
-
-                // Clean up
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
+            if (isIOS) {
+                // For iOS, open in a new tab directly
+                window.open(`/private/download/${key}`, '_blank');
             } else {
-                // Desktop behavior
+                // For other platforms, use the blob approach
+                const response = await ky.get(`/private/download/${key}`);
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);

@@ -7,36 +7,29 @@ export const GET: RequestHandler = async ({ params, platform }: any) => {
         }
         const bucket = platform.env.TRANSFER;
 
-        // First get the object
         const object = await bucket.get(params.key);
 
         if (!object) {
             return error(404, 'File not found');
         }
 
-        // Get the object body and metadata before deletion
         const body = await object.arrayBuffer();
         const headers = new Headers();
 
-        // Add the basic headers
-        object.writeHttpMetadata(headers);
-        headers.set('etag', object.httpEtag);
-
-        // Get the original filename from the key
         const filename = params.key.split('/').pop();
 
-        // Set content disposition and type headers for better download handling
-        headers.set('Content-Disposition', `attachment; filename="${filename}"`);
+        // Set inline content disposition for iOS
+        headers.set('Content-Disposition', `inline; filename="${filename}"`);
         headers.set('Content-Type', 'application/octet-stream');
+        headers.set('Content-Length', body.byteLength.toString());
 
-        // Add headers specifically for iOS/Safari
-        headers.set('Cache-Control', 'no-store');
+        // Prevent caching
+        headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+        headers.set('Expires', '0');
         headers.set('Pragma', 'no-cache');
 
-        // Delete the object after retrieving it
         await bucket.delete(params.key);
 
-        // Return the response with the file data and enhanced headers
         return new Response(body, {
             headers,
             status: 200
