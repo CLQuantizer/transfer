@@ -39,26 +39,26 @@
 
 <div class="container mx-auto p-6">
     <div class="space-y-6">
-        <h1 class="text-2xl font-bold text-slate-900">Files</h1>
+        <h1 class="text-2xl font-bold">Files</h1>
 
         {#if data.files.length === 0}
-            <p class="text-slate-500">No files available.</p>
+            <p>No files available.</p>
         {:else}
             <div class="space-y-4">
                 {#each data.files as file}
-                    <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between p-4 bg-secondary rounded-lg shadow hover:shadow-md transition-shadow">
                         <div class="flex items-center space-x-4">
                             <!-- File type indicator -->
-                            <div class="w-10 h-10 flex items-center justify-center bg-violet-50 rounded-lg">
-                                <span class="text-violet-700 text-sm font-medium">
+                            <div class="w-10 h-10 flex items-center justify-center bg-primary rounded-lg">
+                                <span class="text-sm font-medium">
                                     {getFileType(file.filename)}
                                 </span>
                             </div>
 
                             <!-- File details -->
                             <div class="space-y-1">
-                                <h3 class="text-slate-900 font-medium">{file.filename}</h3>
-                                <div class="flex space-x-4 text-sm text-slate-500">
+                                <h3 class="font-medium">{file.filename}</h3>
+                                <div class="flex space-x-4 text-sm">
                                     <span>{formatFileSize(file.size)}</span>
                                     <span>•</span>
                                     <span>{formatDate(file.uploadedAt)}</span>

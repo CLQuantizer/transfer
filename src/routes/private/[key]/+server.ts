@@ -1,5 +1,4 @@
-import {error, json} from '@sveltejs/kit';
-import type { RequestHandler } from '../../../../.svelte-kit/types/src/routes';
+import {error, json, type RequestHandler} from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ params, platform }: any) => {
     try {
