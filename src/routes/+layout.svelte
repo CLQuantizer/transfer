@@ -1,7 +1,10 @@
 <script>
     import "../app.css";
+    import {ModeWatcher} from "mode-watcher";
 </script>
-<div class="w-full h-full flex flex-col justify-center items-center bg-amber-50">
+
+<ModeWatcher />
+<div class="w-full h-full flex flex-col justify-center items-center">
     <slot />
 </div>
 <style>
