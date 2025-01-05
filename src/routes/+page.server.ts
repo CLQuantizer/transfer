@@ -2,10 +2,10 @@ import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 
 export const load = (async ({ platform }) => {
+    // Get list of objects from R2
     if (!platform || !platform.env) {
         throw error(500, 'Platform not available');
     }
-    // Get list of objects from R2
     const bucket = platform.env.TRANSFER;
     const objects = await bucket.list();
 

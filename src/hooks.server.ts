@@ -17,6 +17,7 @@ export const handle =  async ({ event, resolve }) => {
     if (isPublicRoute) {
         return await resolve(event);
     }
+
     // const parse = tokenSchema.safeParse(event.cookies.get(FE_TOKEN));
     // if (!parse.success) {
     //     console.error("Token json Parsed error:", parse.error);
