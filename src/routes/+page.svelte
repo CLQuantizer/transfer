@@ -32,6 +32,10 @@
     let uploadSpeed = 0;
     let uploadingFileName = '';
     let uploadingFileSize = 0;
+    let uploadTimeElapsed = 0;
+    let uploadError: string | null = null;
+    let uploadRetryCount = 0;
+    let currentXHR: XMLHttpRequest | null = null;
     let dragOver = false;
     let files = data.files;
     let copiedKey = '';
@@ -55,13 +59,29 @@
         )
         : files;
 
-    const handleUpload = async (file: File) => {
+    const cancelUpload = () => {
+        if (currentXHR) {
+            currentXHR.abort();
+            currentXHR = null;
+        }
+        uploading = false;
+        uploadProgress = 0;
+        uploadSpeed = 0;
+        uploadingFileName = '';
+        uploadingFileSize = 0;
+        uploadTimeElapsed = 0;
+        uploadError = null;
+        uploadRetryCount = 0;
+    };
+
+    const handleUpload = async (file: File, retryAttempt = 0): Promise<void> => {
         if (!file) return;
 
         // Validate file
         const maxSize = 100 * 1024 * 1024; // 100MB
         const validation = validateFile(file, maxSize);
         if (!validation.valid) {
+            uploadError = validation.error || 'Invalid file';
             alert(validation.error);
             return;
         }
@@ -69,17 +89,46 @@
         uploading = true;
         uploadProgress = 0;
         uploadSpeed = 0;
+        uploadError = null;
+        uploadRetryCount = retryAttempt;
         uploadingFileName = file.name;
         uploadingFileSize = file.size;
+        uploadTimeElapsed = 0;
+        
         const formData = new FormData();
         formData.append('file', file, file.name);
 
         const startTime = Date.now();
         let lastLoaded = 0;
         let lastTime = startTime;
+        let progressInterval: number | null = null;
+
+        // Update elapsed time
+        progressInterval = window.setInterval(() => {
+            uploadTimeElapsed = Math.floor((Date.now() - startTime) / 1000);
+        }, 1000);
 
         return new Promise<void>((resolve, reject) => {
             const xhr = new XMLHttpRequest();
+            currentXHR = xhr;
+
+            // Set timeout (5 minutes for large files)
+            const timeout = 5 * 60 * 1000;
+            let timeoutId: number | null = null;
+
+            const cleanup = () => {
+                if (progressInterval) clearInterval(progressInterval);
+                if (timeoutId) clearTimeout(timeoutId);
+                currentXHR = null;
+            };
+
+            timeoutId = window.setTimeout(() => {
+                xhr.abort();
+                cleanup();
+                const error = new Error('Upload timeout. The file may be too large or connection is slow.');
+                uploadError = error.message;
+                reject(error);
+            }, timeout);
 
             xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
@@ -98,6 +147,7 @@
             });
 
             xhr.addEventListener('load', () => {
+                cleanup();
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try {
                         const response: R2File = JSON.parse(xhr.responseText);
@@ -105,33 +155,49 @@
                         fileInput.value = '';
                         resolve();
                     } catch (err) {
-                        reject(new Error('Failed to parse response'));
+                        const error = new Error('Failed to parse server response');
+                        uploadError = error.message;
+                        reject(error);
                     }
                 } else {
-                    reject(new Error(`Upload failed: ${xhr.statusText}`));
+                    const error = new Error(`Upload failed: ${xhr.status === 413 ? 'File too large' : xhr.status === 400 ? 'Invalid file' : xhr.statusText || 'Server error'}`);
+                    uploadError = error.message;
+                    reject(error);
                 }
             });
 
             xhr.addEventListener('error', () => {
-                reject(new Error('Upload failed. Please try again.'));
+                cleanup();
+                const error = new Error('Network error. Please check your connection and try again.');
+                uploadError = error.message;
+                reject(error);
             });
 
             xhr.addEventListener('abort', () => {
-                reject(new Error('Upload cancelled'));
+                cleanup();
+                const error = new Error('Upload cancelled');
+                uploadError = error.message;
+                reject(error);
             });
 
             xhr.open('POST', '/private/upload');
             xhr.setRequestHeader('Accept', 'application/json');
             xhr.send(formData);
-        }).catch((error) => {
+        }).catch(async (error) => {
             console.error('Upload failed:', error);
-            alert(error.message || 'Upload failed. Please try again.');
+            uploadError = error.message || 'Upload failed. Please try again.';
+            
+            // Retry logic (max 2 retries)
+            if (retryAttempt < 2 && !error.message.includes('cancelled') && !error.message.includes('Invalid')) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * (retryAttempt + 1))); // Exponential backoff
+                return handleUpload(file, retryAttempt + 1);
+            } else {
+                alert(uploadError);
+            }
         }).finally(async () => {
             uploading = false;
-            uploadProgress = 0;
-            uploadSpeed = 0;
-            uploadingFileName = '';
-            uploadingFileSize = 0;
+            if (progressInterval) clearInterval(progressInterval);
+            currentXHR = null;
             await invalidateAll();
         });
     };
@@ -240,6 +306,8 @@
             <!-- Upload Area with Drag & Drop -->
             <div
                 bind:this={uploadArea}
+                role="button"
+                tabindex="0"
                 class="group relative border-2 border-dashed rounded-2xl p-8 sm:p-12 transition-all duration-300 
                        {dragOver 
                          ? 'border-primary bg-primary/10 scale-[1.02] shadow-lg shadow-primary/20' 
@@ -262,19 +330,53 @@
                 />
                 
                 {#if uploading}
-                    <div class="relative space-y-6">
-                        <div class="flex items-center space-x-4">
-                            <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center text-3xl animate-pulse">
-                                {getFileIcon(uploadingFileName)}
+                    <div class="relative space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4 flex-1 min-w-0">
+                                <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center text-3xl animate-pulse">
+                                    {getFileIcon(uploadingFileName)}
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-2">
+                                        <p class="font-semibold text-lg truncate">{uploadingFileName}</p>
+                                        {#if uploadRetryCount > 0}
+                                            <span class="px-2 py-0.5 text-xs rounded-full bg-orange-500/10 text-orange-500">
+                                                Retry {uploadRetryCount}
+                                            </span>
+                                        {/if}
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground mt-1">
+                                        <span class="font-medium">{uploadProgress}%</span>
+                                        {#if uploadSpeed > 0}
+                                            <span>• {formatSpeed(uploadSpeed)}</span>
+                                        {/if}
+                                        {#if uploadSpeed > 0 && uploadProgress < 100}
+                                            <span>• {formatTimeRemaining(estimateUploadTime((uploadingFileSize * (100 - uploadProgress) / 100), uploadSpeed))} remaining</span>
+                                        {/if}
+                                        {#if uploadTimeElapsed > 0}
+                                            <span>• {formatTimeRemaining(uploadTimeElapsed)} elapsed</span>
+                                        {/if}
+                                        <span>• {formatFileSize(uploadingFileSize)}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="font-semibold text-lg truncate">{uploadingFileName}</p>
-                                <p class="text-sm text-muted-foreground mt-1">
-                                    {uploadProgress}% {uploadSpeed > 0 ? `• ${formatSpeed(uploadSpeed)}` : ''}
-                                    {uploadSpeed > 0 && uploadProgress < 100 ? ` • ${formatTimeRemaining(estimateUploadTime((uploadingFileSize * (100 - uploadProgress) / 100), uploadSpeed))}` : ''}
-                                </p>
-                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                on:click={cancelUpload}
+                                title="Cancel upload"
+                                class="h-9 w-9 p-0 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors flex-shrink-0"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </Button>
                         </div>
+                        {#if uploadError}
+                            <div class="px-4 py-2 rounded-lg bg-destructive/10 text-destructive text-sm">
+                                {uploadError}
+                            </div>
+                        {/if}
                         <div class="relative w-full bg-muted rounded-full h-3 overflow-hidden">
                             <div
                                 class="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-300 ease-out shadow-sm"
