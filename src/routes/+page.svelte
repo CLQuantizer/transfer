@@ -225,8 +225,8 @@
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-    <div class="container mx-auto px-4 py-8 max-w-5xl">
-        <div class="space-y-8">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="space-y-6">
             <!-- Header -->
             <div class="text-center space-y-2 mb-8">
                 <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
@@ -346,63 +346,64 @@
                             </div>
                         {/if}
                         {#each filteredFiles as file, index (file.key)}
-                            <div class="group relative flex items-center justify-between p-5 bg-card border border-border rounded-xl 
+                            <div class="group relative bg-card border border-border rounded-xl 
                                        hover:border-primary/50 hover:shadow-lg transition-all duration-300 
-                                       hover:-translate-y-0.5 backdrop-blur-sm animate-fade-in"
+                                       hover:-translate-y-0.5 backdrop-blur-sm animate-fade-in overflow-hidden"
                                  style="animation-delay: {index * 50}ms">
-                                <div class="flex items-center space-x-4 flex-1 min-w-0">
-                                    <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl 
-                                              group-hover:scale-110 transition-transform duration-300">
-                                        {getFileIcon(file.filename)}
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center space-x-2">
-                                            <h3 class="font-semibold text-base truncate group-hover:text-primary transition-colors">
-                                                {file.filename}
-                                            </h3>
-                                            {#if file.shortKey}
-                                                <span class="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary font-mono">
-                                                    {file.shortKey}
-                                                </span>
-                                            {/if}
-                                            {#if isExpired(file)}
-                                                <span class="px-2 py-0.5 text-xs rounded-full bg-destructive/10 text-destructive">
-                                                    Expired
-                                                </span>
-                                            {:else if file.expiresAt}
-                                                <span class="px-2 py-0.5 text-xs rounded-full bg-orange-500/10 text-orange-500">
-                                                    Expires {formatDate(file.expiresAt, false)}
-                                                </span>
-                                            {/if}
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5">
+                                    <div class="flex items-start space-x-4 flex-1 min-w-0">
+                                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl 
+                                                  group-hover:scale-110 transition-transform duration-300">
+                                            {getFileIcon(file.filename)}
                                         </div>
-                                        <div class="flex items-center space-x-3 text-sm text-muted-foreground mt-1.5">
-                                            <span class="flex items-center">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
-                                                </svg>
-                                                {formatFileSize(file.size)}
-                                            </span>
-                                            <span>•</span>
-                                            <span class="flex items-center">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                {formatDate(file.uploadedAt)}
-                                            </span>
-                                            {#if file.downloadCount !== undefined && file.downloadCount > 0}
-                                                <span>•</span>
-                                                <span class="flex items-center">
-                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                                <h3 class="font-semibold text-base truncate group-hover:text-primary transition-colors max-w-full">
+                                                    {file.filename}
+                                                </h3>
+                                                {#if file.shortKey}
+                                                    <span class="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary font-mono flex-shrink-0">
+                                                        {file.shortKey}
+                                                    </span>
+                                                {/if}
+                                                {#if isExpired(file)}
+                                                    <span class="px-2 py-0.5 text-xs rounded-full bg-destructive/10 text-destructive flex-shrink-0">
+                                                        Expired
+                                                    </span>
+                                                {:else if file.expiresAt}
+                                                    <span class="px-2 py-0.5 text-xs rounded-full bg-orange-500/10 text-orange-500 flex-shrink-0">
+                                                        Expires {formatDate(file.expiresAt, false)}
+                                                    </span>
+                                                {/if}
+                                            </div>
+                                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                                                <span class="flex items-center whitespace-nowrap">
+                                                    <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                                                     </svg>
-                                                    {file.downloadCount} {file.downloadCount === 1 ? 'download' : 'downloads'}
+                                                    {formatFileSize(file.size)}
                                                 </span>
-                                            {/if}
+                                                <span class="hidden sm:inline">•</span>
+                                                <span class="flex items-center whitespace-nowrap">
+                                                    <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    {formatDate(file.uploadedAt)}
+                                                </span>
+                                                {#if file.downloadCount !== undefined && file.downloadCount > 0}
+                                                    <span class="hidden sm:inline">•</span>
+                                                    <span class="flex items-center whitespace-nowrap">
+                                                        <svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                                        </svg>
+                                                        {file.downloadCount} {file.downloadCount === 1 ? 'download' : 'downloads'}
+                                                    </span>
+                                                {/if}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div class="flex items-center space-x-2 flex-shrink-0 ml-4">
+                                    <div class="flex items-center justify-end sm:justify-start space-x-2 flex-shrink-0 sm:ml-4">
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -447,6 +448,7 @@
                                             </svg>
                                         {/if}
                                     </Button>
+                                    </div>
                                 </div>
                             </div>
                         {/each}
