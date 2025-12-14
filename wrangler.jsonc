@@ -15,6 +15,12 @@
       "binding": "TRANSFER",
       "bucket_name": "transfer"
     }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "TRANSFER_KV",
+      "id": "6674b803d088469bb68bec45248950e1"
+    }
   ]
 }
 

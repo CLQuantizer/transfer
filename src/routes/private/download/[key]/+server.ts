@@ -1,28 +1,42 @@
 import {error, type RequestHandler} from '@sveltejs/kit';
-
-// Add MIME type detection
-const getMimeType = (filename: string): string => {
-    const ext = filename.split('.').pop()?.toLowerCase() || '';
-    const mimeTypes: Record<string, string> = {
-        'mp4': 'video/mp4',
-        'png': 'image/png',
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'gif': 'image/gif',
-        'pdf': 'application/pdf',
-        // Add more as needed
-    };
-    return mimeTypes[ext] || 'application/octet-stream';
-};
+import { getMimeType, extractFilename } from '$lib/file-utils';
+import { resolveShortKey, getFileMetadata, incrementDownloadCount, isFileExpired } from '$lib/kv-utils';
 
 export const GET: RequestHandler = async ({ params, platform }: any) => {
     try {
         if (!platform || !platform.env) {
-            return  error(500, 'Platform not available');
+            return error(500, 'Platform not available');
         }
         const bucket = platform.env.TRANSFER;
+        const kv = platform.env.TRANSFER_KV;
 
-        const object = await bucket.get(params.key);
+        let fileKey = params.key;
+
+        // Check if this is a short key
+        if (kv && fileKey.length === 8 && /^[a-zA-Z0-9]+$/.test(fileKey)) {
+            const resolvedKey = await resolveShortKey(kv, fileKey);
+            if (resolvedKey) {
+                fileKey = resolvedKey;
+            }
+        }
+
+        // Get file metadata from KV if available
+        let metadata = null;
+        if (kv) {
+            metadata = await getFileMetadata(kv, fileKey);
+            
+            // Check if file has expired
+            if (metadata && isFileExpired(metadata)) {
+                return error(410, 'File has expired');
+            }
+
+            // Increment download count
+            if (metadata) {
+                await incrementDownloadCount(kv, fileKey);
+            }
+        }
+
+        const object = await bucket.get(fileKey);
 
         if (!object) {
             return error(404, 'File not found');
@@ -31,7 +45,7 @@ export const GET: RequestHandler = async ({ params, platform }: any) => {
         const body = await object.arrayBuffer();
         const headers = new Headers();
 
-        const filename = params.key.split('/').pop() || '';
+        const filename = metadata?.filename || extractFilename(fileKey);
 
         // Set the correct MIME type for the file
         headers.set('Content-Type', getMimeType(filename));
@@ -43,7 +57,16 @@ export const GET: RequestHandler = async ({ params, platform }: any) => {
         headers.set('Expires', '0');
         headers.set('Pragma', 'no-cache');
 
-        await bucket.delete(params.key);
+        // Delete file after download (one-time use)
+        await bucket.delete(fileKey);
+        
+        // Delete metadata from KV
+        if (kv && metadata) {
+            await kv.delete(`file:${fileKey}`);
+            if (metadata.shortKey) {
+                await kv.delete(`short:${metadata.shortKey}`);
+            }
+        }
 
         return new Response(body, {
             headers,

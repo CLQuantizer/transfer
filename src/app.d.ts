@@ -13,6 +13,8 @@ declare global {
 				AI: string
 				// TRANSFER is a cloudflare R2 bucket
 				TRANSFER: any
+				// TRANSFER_KV is a Cloudflare KV namespace for file metadata
+				TRANSFER_KV: KVNamespace
 			}
 		}
 	}
