@@ -227,14 +227,6 @@
 <div class="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <div class="space-y-6">
-            <!-- Header -->
-            <div class="text-center space-y-2 mb-8">
-                <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                    File Transfer
-                </h1>
-                <p class="text-muted-foreground">Upload and share files instantly</p>
-            </div>
-
             <!-- Upload Area with Drag & Drop -->
             <div
                 bind:this={uploadArea}
@@ -317,8 +309,7 @@
                 </div>
             {:else}
                 <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-2xl font-bold">Your Files</h2>
+                    <div class="flex items-center justify-end">
                         <span class="px-3 py-1 rounded-full bg-primary/10 text-sm font-medium text-primary">
                             {filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'}
                         </span>
