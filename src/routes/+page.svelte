@@ -238,7 +238,7 @@
             <!-- Upload Area with Drag & Drop -->
             <div
                 bind:this={uploadArea}
-                class="group relative border-2 border-dashed rounded-2xl p-12 transition-all duration-300 
+                class="group relative border-2 border-dashed rounded-2xl p-8 sm:p-12 transition-all duration-300 
                        {dragOver 
                          ? 'border-primary bg-primary/10 scale-[1.02] shadow-lg shadow-primary/20' 
                          : 'border-border hover:border-primary/50 bg-card/50 backdrop-blur-sm hover:shadow-xl'} 
