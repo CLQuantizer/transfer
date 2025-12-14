@@ -1,0 +1,19 @@
+{
+  "name": "transfer",
+  "main": "src/index.js",
+  "compatibility_date": "2025-12-14",
+  "r2_buckets": [
+    {
+      "binding": "TRANSFER",
+      "bucket_name": "transfer"
+    }
+  ],
+  "site": {
+    "bucket": "./public"
+  },
+  // Local development environment variables
+  "env": {
+    "local": {}
+  }
+}
+
