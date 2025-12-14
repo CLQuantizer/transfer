@@ -37,6 +37,16 @@
     let copiedKey = '';
     let searchQuery = '';
     let deletingKey: string | null = null;
+    let refreshing = false;
+
+    const handleRefresh = async () => {
+        refreshing = true;
+        try {
+            await invalidateAll();
+        } finally {
+            refreshing = false;
+        }
+    };
 
     // Filter files based on search query
     $: filteredFiles = searchQuery 
@@ -309,7 +319,25 @@
                 </div>
             {:else}
                 <div class="space-y-4">
-                    <div class="flex items-center justify-end">
+                    <div class="flex items-center justify-between">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            on:click={handleRefresh}
+                            disabled={refreshing}
+                            title="Refresh file list"
+                            class="h-9 w-9 p-0 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
+                        >
+                            {#if refreshing}
+                                <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            {:else}
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            {/if}
+                        </Button>
                         <span class="px-3 py-1 rounded-full bg-primary/10 text-sm font-medium text-primary">
                             {filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'}
                         </span>
