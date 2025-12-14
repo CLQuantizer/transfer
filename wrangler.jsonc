@@ -1,8 +1,15 @@
 {
   "name": "transfer",
-  "main": "src/index.js",
-  "compatibility_date": "2025-12-14",
-  "r2_buckets": [
+  "main": ".svelte-kit/cloudflare/_worker.js",
+  "compatibility_date": "2025-04-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+      "binding": "ASSETS",
+      "directory": ".svelte-kit/cloudflare"
+  },
+  "observability": {
+      "enabled": true
+  },  "r2_buckets": [
     {
       "binding": "TRANSFER",
       "bucket_name": "transfer"
