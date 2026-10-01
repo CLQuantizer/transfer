@@ -40,17 +40,23 @@ export CF_ACCESS_CLIENT_SECRET="yyyyyyyyyyyy"
 
 ### Commands
 
+From this repo (`pnpm transfer …`) or globally after `pnpm link --global` (`transfer …`):
+
 ```bash
-transfer list
-transfer upload ./file.zip
-transfer upload ./file.zip --expires 24
-transfer download <key-or-shortKey>
-transfer download <key> -o ./saved.zip
-transfer delete <key>
-transfer logout
+pnpm transfer login --cloudflared   # or: transfer login (service token)
+
+pnpm transfer list
+pnpm transfer upload ./file.zip
+pnpm transfer upload ./file.zip --expires 24
+pnpm transfer download <key-or-shortKey>
+pnpm transfer download <key> -o ./saved.zip
+pnpm transfer delete <key>
+pnpm transfer logout
 ```
 
-**Note:** `download` is one-time — the server deletes the file after a successful download (same as the web UI).
+**Notes:**
+- `download` is one-time — the server deletes the file after a successful download (same as the web UI).
+- `GET /private/files` (used by `transfer list`) must be **deployed** before listing works against https://transfer.gongxifacai.win — until then prod will 404.
 
 ### Manual curl (same APIs)
 
