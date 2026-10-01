@@ -1,15 +1,19 @@
 {
-	"name": "json",
+	"name": "transfer",
 	"version": "0.0.1",
 	"private": true,
 	"packageManager": "pnpm@10.18.2",
+	"bin": {
+		"transfer": "./cli/transfer.mjs"
+	},
 	"scripts": {
 		"dev": "vite dev  --host 0.0.0.0 --port 3000",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "vitest"
+		"test": "vitest",
+		"transfer": "node ./cli/transfer.mjs"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^3.0.0",
